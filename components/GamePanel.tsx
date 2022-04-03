@@ -31,6 +31,28 @@ const GamePanel = (props: any) => {
     setGrid(grid);
   }
 
+  //const renderButtons = () => {
+  //  return (
+  //    <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+  //      <TouchableOpacity onPress={() => this.shiftCells('left')}>
+  //        <Image style={styles.img} source={require('../img/left-filled.png')} />
+  //      </TouchableOpacity>
+  //      <TouchableOpacity onPress={() => this.shiftCells('right')}>
+  //        <Image style={styles.img} source={require('../img/right-filled.png')} />
+  //      </TouchableOpacity>
+  //      <TouchableOpacity onPress={() => this.down()}>
+  //        <Image style={styles.img} source={require('../img/down_arrow.png')} />
+  //      </TouchableOpacity>
+
+  //      <TouchableOpacity onPress={() => this.rotate()}>
+  //        <Image style={styles.img} source={require('../img/rotate_arrow.png')} />
+  //      </TouchableOpacity>
+
+  //    </View>
+  //  )
+
+  //}
+
   const renderCells = () => {
     //console.log('renderCells');
     const cellSize = 15
@@ -81,14 +103,32 @@ const GamePanel = (props: any) => {
     })
   }
 
+  const shiftCells = (direction: string) => {
+
+  }
+  
+  const rotateCells = () => {
+
+  }
+
   return (
     <View style={{ flexDirection: 'column', justifyContent: 'space-around' }}>
 
-      <View style={{ paddingTop: 40, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={{ paddingTop: 10, justifyContent: 'center', alignItems: 'center' }}>
         <Text style={{ fontWeight: '700', fontSize: 26 }}>TETRIS ONLINE</Text>
       </View>
 
       <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
+
+        <View style={{ marginRight: 10, flexDirection: 'row', alignItems: 'flex-end' }}>
+          <TouchableOpacity onPress={() => shiftCells('left')}>
+            <Image style={styles.img} source={require('../assets/left.jpg')} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => shiftCells('right')}>
+            <Image style={styles.img} source={require('../assets/right.jpg')} />
+          </TouchableOpacity>
+        </View>
+
         <View style={{ paddingTop: 10, flexDirection: 'column', alignItems: 'center' }}>
           <View style={{ justifyContent: 'center', alignItems: 'center' }}>
             <Text>Opponent</Text>
@@ -98,7 +138,7 @@ const GamePanel = (props: any) => {
           </View>
         </View>
 
-        <View style={{ marginHorizontal: 35,  alignItems: 'center' }}>
+        <View style={{ marginHorizontal: 35, alignItems: 'center' }}>
           <Text style={{ fontSize: 16, fontWeight: '600' }}>NEXT</Text>
         </View>
 
@@ -111,6 +151,11 @@ const GamePanel = (props: any) => {
           </View>
         </View>
 
+        <View style={{ marginRight: 10, flexDirection: 'row', alignItems: 'flex-end' }}>
+          <TouchableOpacity onPress={() => rotateCells()}>
+            <Image style={styles.img} source={require('../assets/rotate.png')} />
+          </TouchableOpacity>
+        </View>
 
       </View>
 
