@@ -3,7 +3,7 @@
     "name": "TetrisOnline",
     "slug": "TetrisOnline",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "landscape",
     "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/splash.png",
@@ -17,7 +17,7 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
     },
     "android": {
       "adaptiveIcon": {
