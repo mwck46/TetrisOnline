@@ -2,20 +2,21 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, Image, Text, Modal, TouchableOpacity } from 'react-native';
 
 import Cell from "./Cell"
-import {getRandomInt} from "./helper"
-import {Block, TetrisBlockFactory} from "./Block"
+import { getRandomInt } from "./helper"
+import { Block, TetrisBlockFactory } from "./Block"
 
 const tetrisGridInit: number[][] = []
+const blockTypes: string[] = ["l", "L", /*"j", "s", "z", "o", "T"*/]
+var nextBlock: Block;
 
 const GamePanel = (props: any) => {
   const { w, h } = props;
   const [tetrisGridMine, setTetrisGrid] = useState<number[][]>(tetrisGridInit);
   const [tetrisGridOpponent, setTetrisGridOpponent] = useState<number[][]>([]);
   //const [nextBlock, setNextBlock] = useState<Block>();
-  const [speed, setSpeed] = useState(1000);
+  const [speed, setSpeed] = useState(500);
   var timer: NodeJS.Timer;
   const fact = new TetrisBlockFactory();
-  let nextBlock: Block;
 
   // React hook equivalent to componentDidMount
   // https://stackoverflow.com/a/54655508/9265852
@@ -36,38 +37,37 @@ const GamePanel = (props: any) => {
     }
     timer = setInterval(() => {
       // Make sure tick receive the latest tetrisGrid value
-      setTetrisGrid(grid => {return tick(grid, nextBlock)})
+      setTetrisGrid(grid => { return tick(grid, nextBlock) })
     }, speed)
   }
 
   const tick = (grid: number[][], nextBlock: Block) => {
-    console.log("tick")
+    //console.log("tick")
 
     //let tetrisGridClone = grid.map( (row) => {return [...row]} )
 
-    ////////////////////////////////
-    // For testing
-    //tetrisGridClone = createGrid()
-    //const i = getRandomInt(0, 10)
-    //tetrisGridClone[14][i] = 1;
-    //tetrisGridClone[15][i] = 1;
-    //tetrisGridClone[16][i] = 1;
-    //tetrisGridClone[17][i] = 1;
-    console.log(nextBlock);
-    const tetrisGridClone = nextBlock?.rotate(grid);
-    ////////////////////////////////
+    let tetrisGridClone = nextBlock?.translate(grid, 'down');
+    if (!tetrisGridClone) {
+      console.log("cannot drop")
+      generateNextBlock();
+      tetrisGridClone = grid;
+    }
 
-      return tetrisGridClone;
+    return tetrisGridClone;
   }
 
   const generateNextBlock = () => {
     //setNextBlock(nextBlock => { return fact.generateBlock("l", [10,w/2])})
-    nextBlock = fact.generateBlock("l", [10,w/2]);
+    
+    nextBlock = fact.generateBlock(
+      blockTypes[getRandomInt(0, blockTypes.length)], 
+      [1, w / 2]
+      );
   }
 
 
   const createGrid = () => {
-    console.log("createGrid()")
+    //console.log("createGrid()")
 
     var grid = []; var row = [];
     var row = [];
@@ -135,11 +135,22 @@ const GamePanel = (props: any) => {
   }
 
   const shiftCells = (grid: number[][], direction: string) => {
-
+    let tetrisGridClone = nextBlock?.translate(grid, direction);
+    if (!tetrisGridClone) {
+      console.log("cannot shift")
+      return
+    }
+    setTetrisGrid(tetrisGridClone)
   }
 
-  const rotateCells = (grid: number[][]) => {
-
+  const rotateCells = () => {
+    console.log("rotate")
+    let tetrisGridClone = nextBlock?.rotate(tetrisGridMine);
+    if (!tetrisGridClone) {
+      console.log("cannot rotate")
+      return
+    }
+    setTetrisGrid(tetrisGridClone)
   }
 
   return (
@@ -183,7 +194,7 @@ const GamePanel = (props: any) => {
         </View>
 
         <View style={{ marginRight: 10, flexDirection: 'row', alignItems: 'flex-end' }}>
-          <TouchableOpacity onPress={() => rotateCells(tetrisGridMine)}>
+          <TouchableOpacity onPress={() => rotateCells(nextBlock)}>
             <Image style={styles.img} source={require('../assets/rotate.png')} />
           </TouchableOpacity>
         </View>
