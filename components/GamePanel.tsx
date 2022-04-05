@@ -5,12 +5,25 @@ import Cell from "./Cell"
 
 const GamePanel = (props: any) => {
   const { w, h } = props;
-  const [tetrisGrid, setGrid] = useState<number[][]>([]);
+  const [tetrisGrid, setTetrisGrid] = useState<number[][]>([]);
+  const [tetrisGridOpponent, setTetrisGridOpponent] = useState<number[][]>([]);
 
   // React hook equivalent to componentDidMount
   // https://stackoverflow.com/a/54655508/9265852
   useEffect(() => {
-    createGrid();
+    var grid1 = createGrid();
+    grid1[15][4] = 1;
+    grid1[15][5] = 1;
+    grid1[15][6] = 1;
+    grid1[15][7] = 1;
+    setTetrisGrid(grid1);
+
+    var grid2 = createGrid();
+    grid2[14][4] = 2;
+    grid2[15][4] = 2;
+    grid2[16][4] = 2;
+    grid2[17][4] = 2;
+    setTetrisGridOpponent(grid2);
   }, []);
 
 
@@ -28,7 +41,8 @@ const GamePanel = (props: any) => {
       grid.push(row);
       row = [];
     }
-    setGrid(grid);
+
+    return grid;
   }
 
   //const renderButtons = () => {
@@ -53,13 +67,13 @@ const GamePanel = (props: any) => {
 
   //}
 
-  const renderCells = () => {
-    //console.log('renderCells');
+  const renderCells = (grid : number[][]) => {
+    console.log('renderCells');
     const cellSize = 15
 
     // Array.prototype.map(), create new array by populate the results 
     // of calling a provided function on every element in the calling array.
-    return tetrisGrid.map((row, i) => { // row: each row of grid, i: row number
+    return grid.map((row, i) => { // row: each row of grid, i: row number
       // console.log(row, i)
 
       // 4 invisible rows on top of the visible grid
@@ -103,11 +117,11 @@ const GamePanel = (props: any) => {
     })
   }
 
-  const shiftCells = (direction: string) => {
+  const shiftCells = (grid: number[][], direction: string) => {
 
   }
   
-  const rotateCells = () => {
+  const rotateCells = (grid: number[][]) => {
 
   }
 
@@ -121,10 +135,10 @@ const GamePanel = (props: any) => {
       <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
 
         <View style={{ marginRight: 10, flexDirection: 'row', alignItems: 'flex-end' }}>
-          <TouchableOpacity onPress={() => shiftCells('left')}>
+          <TouchableOpacity onPress={() => shiftCells(tetrisGrid ,'left')}>
             <Image style={styles.img} source={require('../assets/left.jpg')} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => shiftCells('right')}>
+          <TouchableOpacity onPress={() => shiftCells(tetrisGrid ,'right')}>
             <Image style={styles.img} source={require('../assets/right.jpg')} />
           </TouchableOpacity>
         </View>
@@ -134,7 +148,7 @@ const GamePanel = (props: any) => {
             <Text>Opponent</Text>
           </View>
           <View style={{ backgroundColor: 'white' }}>
-            {renderCells()}
+            {renderCells(tetrisGridOpponent)}
           </View>
         </View>
 
@@ -147,12 +161,12 @@ const GamePanel = (props: any) => {
             <Text>You</Text>
           </View>
           <View style={{ backgroundColor: 'white' }}>
-            {renderCells()}
+            {renderCells(tetrisGrid)}
           </View>
         </View>
 
         <View style={{ marginRight: 10, flexDirection: 'row', alignItems: 'flex-end' }}>
-          <TouchableOpacity onPress={() => rotateCells()}>
+          <TouchableOpacity onPress={() => rotateCells(tetrisGrid)}>
             <Image style={styles.img} source={require('../assets/rotate.png')} />
           </TouchableOpacity>
         </View>

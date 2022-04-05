@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
 const Cell = (props: any) => {
   const { color, size, borderWidth } = props;
-  console.log(color, size, borderWidth)
+  //console.log(color, size, borderWidth)
 
   return (
      <View style={[styles.cell, {
