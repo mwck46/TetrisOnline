@@ -142,11 +142,28 @@ export class TetrisBlockFactory {
     } else if (blockType === 'L') {
       const orientations = [
         [[2, 0], [1, 0], [0, 0], [0, 1]],
-        [[0, -2], [0, -1], [0, 0], [1, 0]],
-        [[0, -1], [0, 0], [-1, 0], [-2, 0]],
-        [[-1, 0], [0, 0], [0, +1], [0, +2]],
+        [[-1, 0], [0, 0], [0, 1], [0, 2]],
+        [[-2, 0], [-1, 0], [0, 0], [0, -1]],
+        [[0,-2], [0, -1], [0, 0], [+1, 0]],
       ]
-      const color = 1;
+      const color = 2;
+      const b = new Block(orientations, initCoord, color);
+      return b;
+    } else if (blockType === 'J') {
+      const orientations = [
+        [[2, 0], [1, 0], [0, 0], [0, -1]],
+        [[1, 0], [0, 0], [0, 1], [0, 2]],
+        [[0, 1], [0, 0], [-1, 0], [-2, 0]],
+        [[0, -2], [0, -1], [0, 0], [-1, 0]],
+      ]
+      const color = 3;
+      const b = new Block(orientations, initCoord, color);
+      return b;
+    } else if (blockType === 'o') {
+      const orientations = [
+        [[1, 1], [1, 0], [0, 0], [0, 1]],
+      ]
+      const color = 4;
       const b = new Block(orientations, initCoord, color);
       return b;
     } else {
