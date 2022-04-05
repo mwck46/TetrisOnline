@@ -129,6 +129,7 @@ export class Block {
 
 export class TetrisBlockFactory {
   generateBlock(blockType: string, initCoord: number[]) {
+    // CAUTION! +ve y points downward! 
     if (blockType === 'l') {
       const orientations = [
         [[2, 0], [1, 0], [0, 0], [-1, 0]],
@@ -141,20 +142,20 @@ export class TetrisBlockFactory {
       return b;
     } else if (blockType === 'L') {
       const orientations = [
-        [[2, 0], [1, 0], [0, 0], [0, 1]],
-        [[-1, 0], [0, 0], [0, 1], [0, 2]],
-        [[-2, 0], [-1, 0], [0, 0], [0, -1]],
-        [[0,-2], [0, -1], [0, 0], [+1, 0]],
+        [[2, 0], [1, 0], [0, 0], [0, -1]],
+        [[-1, 0], [0, 0], [0, -1], [0, -2]],
+        [[-2, 0], [-1, 0], [0, 0], [0, 1]],
+        [[0,2], [0, 1], [0, 0], [+1, 0]],
       ]
       const color = 2;
       const b = new Block(orientations, initCoord, color);
       return b;
     } else if (blockType === 'J') {
       const orientations = [
-        [[2, 0], [1, 0], [0, 0], [0, -1]],
-        [[1, 0], [0, 0], [0, 1], [0, 2]],
-        [[0, 1], [0, 0], [-1, 0], [-2, 0]],
-        [[0, -2], [0, -1], [0, 0], [-1, 0]],
+        [[2, 0], [1, 0], [0, 0], [0, 1]],
+        [[1, 0], [0, 0], [0, -1], [0, -2]],
+        [[0, -1], [0, 0], [-1, 0], [-2, 0]],
+        [[0, 2], [0, 1], [0, 0], [-1, 0]],
       ]
       const color = 3;
       const b = new Block(orientations, initCoord, color);

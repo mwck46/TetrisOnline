@@ -6,7 +6,7 @@ import { getRandomInt } from "./helper"
 import { Block, TetrisBlockFactory } from "./Block"
 
 const tetrisGridInit: number[][] = []
-const blockTypes: string[] = ["L" /*"l", "L", "J", "o", "s", "z",  "T"*/]
+const blockTypes: string[] = ["l", "L", "J", "o", /*"s", "z",  "T"*/]
 var nextBlock: Block;
 
 const GamePanel = (props: any) => {
