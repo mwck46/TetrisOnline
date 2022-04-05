@@ -200,7 +200,7 @@ const GamePanel = (props: any) => {
         </View>
 
         <View style={{ marginRight: 10, flexDirection: 'row', alignItems: 'flex-end' }}>
-          <TouchableOpacity onPress={() => rotateCells(nextBlock)}>
+          <TouchableOpacity onPress={() => rotateCells()}>
             <Image style={styles.img} source={require('../assets/rotate.png')} />
           </TouchableOpacity>
         </View>
