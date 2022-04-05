@@ -2,29 +2,56 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, Image, Text, Modal, TouchableOpacity } from 'react-native';
 
 import Cell from "./Cell"
+import {getRandomInt} from "./helper"
+
+const tetrisGridInit: number[][] = []
 
 const GamePanel = (props: any) => {
   const { w, h } = props;
-  const [tetrisGrid, setTetrisGrid] = useState<number[][]>([]);
+  const [tetrisGrid, setTetrisGrid] = useState<number[][]>(tetrisGridInit);
   const [tetrisGridOpponent, setTetrisGridOpponent] = useState<number[][]>([]);
+  const [speed, setSpeed] = useState(1000);
+  var timer: NodeJS.Timer;
 
   // React hook equivalent to componentDidMount
   // https://stackoverflow.com/a/54655508/9265852
   useEffect(() => {
     var grid1 = createGrid();
-    grid1[15][4] = 1;
-    grid1[15][5] = 1;
-    grid1[15][6] = 1;
-    grid1[15][7] = 1;
     setTetrisGrid(grid1);
 
     var grid2 = createGrid();
-    grid2[14][4] = 2;
-    grid2[15][4] = 2;
-    grid2[16][4] = 2;
-    grid2[17][4] = 2;
     setTetrisGridOpponent(grid2);
+
+    startGame();
   }, []);
+
+  const startGame = () => {
+    if (!timer) {
+      clearInterval(timer);
+    }
+    timer = setInterval(() => {
+      // Make sure tick receive the latest tetrisGrid value
+      setTetrisGrid(grid => {return tick(grid)})
+    }, speed)
+  }
+
+  const tick = (grid: number[][]) => {
+    //console.log("tick")
+
+    let tetrisGridClone = grid.map( (row) => {return [...row]} )
+
+    ////////////////////////////////
+    // For testing
+    tetrisGridClone = createGrid()
+    const i = getRandomInt(0, 10)
+    tetrisGridClone[14][i] = 1;
+    tetrisGridClone[15][i] = 1;
+    tetrisGridClone[16][i] = 1;
+    tetrisGridClone[17][i] = 1;
+    ////////////////////////////////
+
+      return tetrisGridClone;
+  }
 
 
   const createGrid = () => {
@@ -67,7 +94,7 @@ const GamePanel = (props: any) => {
 
   //}
 
-  const renderCells = (grid : number[][]) => {
+  const renderCells = (grid: number[][]) => {
     console.log('renderCells');
     const cellSize = 15
 
@@ -120,7 +147,7 @@ const GamePanel = (props: any) => {
   const shiftCells = (grid: number[][], direction: string) => {
 
   }
-  
+
   const rotateCells = (grid: number[][]) => {
 
   }
@@ -135,10 +162,10 @@ const GamePanel = (props: any) => {
       <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
 
         <View style={{ marginRight: 10, flexDirection: 'row', alignItems: 'flex-end' }}>
-          <TouchableOpacity onPress={() => shiftCells(tetrisGrid ,'left')}>
+          <TouchableOpacity onPress={() => shiftCells(tetrisGrid, 'left')}>
             <Image style={styles.img} source={require('../assets/left.jpg')} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => shiftCells(tetrisGrid ,'right')}>
+          <TouchableOpacity onPress={() => shiftCells(tetrisGrid, 'right')}>
             <Image style={styles.img} source={require('../assets/right.jpg')} />
           </TouchableOpacity>
         </View>
