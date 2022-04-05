@@ -1,9 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, Image, Text, Modal, TouchableOpacity } from 'react-native';
+import uuid from 'react-native-uuid';
+import Constants from "expo-constants";
 
 import Cell from "./Cell"
 import { getRandomInt } from "./helper"
 import { Block, TetrisBlockFactory } from "./Block"
+
+const { manifest } = Constants;
+const characterId = uuid.v4().toString();
+var url = ""
+if (!manifest?.debuggerHost) {
+  url = 'ws://localhost:18080';
+} else {
+  url = `ws://${manifest.debuggerHost.split(':').shift()}:18080`;
+}
+// Don't put websocket instance inside App, bcz everything inside will 
+// be constantly refreshed, thus many connection will be created
+var wsock: WebSocket;
+
 
 const tetrisGridInit: number[][] = []
 const blockTypes: string[] = ["l", "L", "J", "o", /*"s", "z",  "T"*/]
