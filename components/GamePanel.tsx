@@ -3,15 +3,19 @@ import { View, StyleSheet, Image, Text, Modal, TouchableOpacity } from 'react-na
 
 import Cell from "./Cell"
 import {getRandomInt} from "./helper"
+import {Block, TetrisBlockFactory} from "./Block"
 
 const tetrisGridInit: number[][] = []
 
 const GamePanel = (props: any) => {
   const { w, h } = props;
-  const [tetrisGrid, setTetrisGrid] = useState<number[][]>(tetrisGridInit);
+  const [tetrisGridMine, setTetrisGrid] = useState<number[][]>(tetrisGridInit);
   const [tetrisGridOpponent, setTetrisGridOpponent] = useState<number[][]>([]);
+  //const [nextBlock, setNextBlock] = useState<Block>();
   const [speed, setSpeed] = useState(1000);
   var timer: NodeJS.Timer;
+  const fact = new TetrisBlockFactory();
+  let nextBlock: Block;
 
   // React hook equivalent to componentDidMount
   // https://stackoverflow.com/a/54655508/9265852
@@ -22,6 +26,7 @@ const GamePanel = (props: any) => {
     var grid2 = createGrid();
     setTetrisGridOpponent(grid2);
 
+    generateNextBlock();
     startGame();
   }, []);
 
@@ -31,26 +36,33 @@ const GamePanel = (props: any) => {
     }
     timer = setInterval(() => {
       // Make sure tick receive the latest tetrisGrid value
-      setTetrisGrid(grid => {return tick(grid)})
+      setTetrisGrid(grid => {return tick(grid, nextBlock)})
     }, speed)
   }
 
-  const tick = (grid: number[][]) => {
-    //console.log("tick")
+  const tick = (grid: number[][], nextBlock: Block) => {
+    console.log("tick")
 
-    let tetrisGridClone = grid.map( (row) => {return [...row]} )
+    //let tetrisGridClone = grid.map( (row) => {return [...row]} )
 
     ////////////////////////////////
     // For testing
-    tetrisGridClone = createGrid()
-    const i = getRandomInt(0, 10)
-    tetrisGridClone[14][i] = 1;
-    tetrisGridClone[15][i] = 1;
-    tetrisGridClone[16][i] = 1;
-    tetrisGridClone[17][i] = 1;
+    //tetrisGridClone = createGrid()
+    //const i = getRandomInt(0, 10)
+    //tetrisGridClone[14][i] = 1;
+    //tetrisGridClone[15][i] = 1;
+    //tetrisGridClone[16][i] = 1;
+    //tetrisGridClone[17][i] = 1;
+    console.log(nextBlock);
+    const tetrisGridClone = nextBlock?.rotate(grid);
     ////////////////////////////////
 
       return tetrisGridClone;
+  }
+
+  const generateNextBlock = () => {
+    //setNextBlock(nextBlock => { return fact.generateBlock("l", [10,w/2])})
+    nextBlock = fact.generateBlock("l", [10,w/2]);
   }
 
 
@@ -71,28 +83,6 @@ const GamePanel = (props: any) => {
 
     return grid;
   }
-
-  //const renderButtons = () => {
-  //  return (
-  //    <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-  //      <TouchableOpacity onPress={() => this.shiftCells('left')}>
-  //        <Image style={styles.img} source={require('../img/left-filled.png')} />
-  //      </TouchableOpacity>
-  //      <TouchableOpacity onPress={() => this.shiftCells('right')}>
-  //        <Image style={styles.img} source={require('../img/right-filled.png')} />
-  //      </TouchableOpacity>
-  //      <TouchableOpacity onPress={() => this.down()}>
-  //        <Image style={styles.img} source={require('../img/down_arrow.png')} />
-  //      </TouchableOpacity>
-
-  //      <TouchableOpacity onPress={() => this.rotate()}>
-  //        <Image style={styles.img} source={require('../img/rotate_arrow.png')} />
-  //      </TouchableOpacity>
-
-  //    </View>
-  //  )
-
-  //}
 
   const renderCells = (grid: number[][]) => {
     console.log('renderCells');
@@ -162,10 +152,10 @@ const GamePanel = (props: any) => {
       <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
 
         <View style={{ marginRight: 10, flexDirection: 'row', alignItems: 'flex-end' }}>
-          <TouchableOpacity onPress={() => shiftCells(tetrisGrid, 'left')}>
+          <TouchableOpacity onPress={() => shiftCells(tetrisGridMine, 'left')}>
             <Image style={styles.img} source={require('../assets/left.jpg')} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => shiftCells(tetrisGrid, 'right')}>
+          <TouchableOpacity onPress={() => shiftCells(tetrisGridMine, 'right')}>
             <Image style={styles.img} source={require('../assets/right.jpg')} />
           </TouchableOpacity>
         </View>
@@ -188,12 +178,12 @@ const GamePanel = (props: any) => {
             <Text>You</Text>
           </View>
           <View style={{ backgroundColor: 'white' }}>
-            {renderCells(tetrisGrid)}
+            {renderCells(tetrisGridMine)}
           </View>
         </View>
 
         <View style={{ marginRight: 10, flexDirection: 'row', alignItems: 'flex-end' }}>
-          <TouchableOpacity onPress={() => rotateCells(tetrisGrid)}>
+          <TouchableOpacity onPress={() => rotateCells(tetrisGridMine)}>
             <Image style={styles.img} source={require('../assets/rotate.png')} />
           </TouchableOpacity>
         </View>
