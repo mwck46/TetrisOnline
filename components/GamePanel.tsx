@@ -92,7 +92,13 @@ const GamePanel = (props: any) => {
           serverMessagesList.push(`[Error] ${msgObj.remarks}`)
         }
 
-      } else {
+      } else if (msgObj.sender === "RIVAL") {
+        if(msgObj.message === "TICK"){
+          const newOpponentTetrisGrid = JSON.parse(msgObj.remarks)
+          setTetrisGridOpponent(newOpponentTetrisGrid)
+        }
+      }
+      else {
       }
 
       setServerMessages(serverMessages => [...serverMessages, ...serverMessagesList])
@@ -112,7 +118,13 @@ const GamePanel = (props: any) => {
     generateNextBlock();
     timer = setInterval(() => {
       // Make sure tick receive the latest tetrisGrid value
-      setTetrisGrid(grid => { return tick(grid, nextBlock) })
+      setTetrisGrid(grid => { 
+        const newGrid = tick(grid, nextBlock)
+        // send your current grid to your opponent
+        const msg = new GameMessage(characterId, "TICK", JSON.stringify(newGrid)).toString();
+        ws.send(msg);
+        return newGrid;
+      })
     }, speed)
   }
 
@@ -261,7 +273,7 @@ const GamePanel = (props: any) => {
     return (
       <Modal
         animationType={"slide"}
-        transparent={true}
+        // transparent={true}
         visible={isGameOver}
         style={{ flex: 1 }}
       >
@@ -357,7 +369,7 @@ const GamePanel = (props: any) => {
 
 
         <View style={styles.logger}>
-          <ScrollView >
+          <ScrollView style={{width:300, height: 300}}>
             {
               serverMessages.map((item, ind) => {
                 return (
@@ -394,7 +406,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     borderWidth: 3,
     marginHorizontal: 10,
-    height: '90%' // why 100% will overflow the flex box??
+    display: 'none'
   },
 });
 
