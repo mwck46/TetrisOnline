@@ -5,7 +5,8 @@ import Constants from "expo-constants";
 
 import Cell from "./Cell"
 import { GameMessage } from "./GameMessage"
-import { getRandomInt } from "./helper"
+import { getRandomInt, Color } from "./helper"
+
 import { Block, TetrisBlockFactory } from "./Block"
 
 const { manifest } = Constants;
@@ -149,11 +150,26 @@ const GamePanel = (props: any) => {
     let tetrisGridClone = nextBlock?.translate(grid, 'down');
     if (!tetrisGridClone) {
       console.log("cannot drop")
+      grid = turnBlockToGray(grid);
+      grid = clearOutGrid(grid);
       generateNextBlock();
       tetrisGridClone = grid;
     }
 
     return tetrisGridClone;
+  }
+
+  const turnBlockToGray = (grid: number[][]) => {
+    for (let p of nextBlock.orientations[nextBlock.currOrientationIdx]) {
+      const rowIdx = nextBlock.currCoord[0] + p[0];
+      const colIdx = nextBlock.currCoord[1] + p[1];
+      grid[rowIdx][colIdx] = Color.Gray;
+    }
+    return grid;
+  }
+
+  const clearOutGrid = (grid: number[][]) => {
+    return grid;
   }
 
   const generateNextBlock = () => {
@@ -213,9 +229,9 @@ const GamePanel = (props: any) => {
           {row.map((cell, j) => {
             // console.log('color is:', cell)
             var color = 'white';
-            if (cell == 1) {
+            if (cell == Color.Blue) {
               color = 'blue';
-            } else if (cell == 2) {
+            } else if (cell == Color.Green) {
               color = 'green';
             } else if (cell == 3) {
               color = 'orange';
