@@ -1,9 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Image, Text, Modal, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Image, Text, TextInput, Modal, TouchableOpacity, ScrollView } from 'react-native';
+import uuid from 'react-native-uuid';
+import Constants from "expo-constants";
 
 import Cell from "./Cell"
+import { GameMessage } from "./GameMessage"
 import { getRandomInt, Color } from "./helper"
+
 import { Block, TetrisBlockFactory } from "./Block"
+
+const { manifest } = Constants;
+const characterId = uuid.v4().toString();
+var url = ""
+if (!manifest?.debuggerHost) {
+  url = 'ws://localhost:18080';
+} else {
+  url = `ws://${manifest.debuggerHost.split(':').shift()}:18080`;
+}
+// Don't put websocket instance inside App, bcz everything inside will 
+// be constantly refreshed, thus many connection will be created
+var ws: WebSocket;
+
 
 const tetrisGridInit: number[][] = []
 const blockTypes: string[] = ["l", "L", "J", "o", /*"s", "z",  "T"*/]
@@ -13,8 +30,14 @@ const GamePanel = (props: any) => {
   const { w, h } = props;
   const [tetrisGridMine, setTetrisGrid] = useState<number[][]>(tetrisGridInit);
   const [tetrisGridOpponent, setTetrisGridOpponent] = useState<number[][]>([]);
+  const [isStarted, setIsStarted] = useState(false);
+  const [isGameOver, setIsGameOver] = useState(true);
+  const [myScore, setMyScore] = useState(0);
+  const [opponentScore, setOpponentScore] = useState(0);
+  const [serverMessages, setServerMessages] = useState<string[]>([]);
   //const [nextBlock, setNextBlock] = useState<Block>();
   const [speed, setSpeed] = useState(500);
+  const [gameId, setGameId] = useState('');
   var timer: NodeJS.Timer;
   const fact = new TetrisBlockFactory();
 
@@ -27,18 +50,96 @@ const GamePanel = (props: any) => {
     var grid2 = createGrid();
     setTetrisGridOpponent(grid2);
 
-    generateNextBlock();
-    startGame();
+    ws = new WebSocket(url);
+    console.log("ws = ", ws)
+    
+    ws.onopen = () => {
+      const serverMessagesList: string[] = [];
+      serverMessagesList.push('Connected')
+      setServerMessages(serverMessages => [...serverMessages, ...serverMessagesList])
+    };
+    ws.onclose = (e) => {
+      const serverMessagesList: string[] = [];
+      serverMessagesList.push('Disconnected')
+      setServerMessages(serverMessages => [...serverMessages, ...serverMessagesList])
+    };
+    ws.onerror = (e: Event) => {
+      const serverMessagesList: string[] = [];
+      const msg = (e as WebSocketErrorEvent).message
+      setServerMessages(serverMessages => [...serverMessages, ...serverMessagesList])
+    };
+    ws.onmessage = (e) => {
+      const serverMessagesList: string[] = [];
+      serverMessagesList.push(e.data)
+
+      console.log(e.data)
+      const msgObj = GameMessage.parseFromSocket(e.data)
+      console.log(msgObj)
+
+      if (msgObj.sender === "SERVER") {
+        if(msgObj.message === "GAMEID"){
+          setGameId(msgObj.remarks);
+          setIsGameOver(false);
+        }else if(msgObj.message === "JOINGAME"){
+          if(msgObj.remarks === "OK"){
+            setIsGameOver(false);
+          }else{
+            serverMessagesList.push("Cannot join game")
+          }
+        }else if(msgObj.message === "GAMESTART"){
+          startGame();
+          serverMessagesList.push("Game start")
+        }else if(msgObj.message === "ERROR"){
+          serverMessagesList.push(`[Error] ${msgObj.remarks}`)
+        }
+
+      } else if (msgObj.sender === "RIVAL") {
+        if(msgObj.message === "TICK"){
+          const newOpponentTetrisGrid = JSON.parse(msgObj.remarks)
+          setTetrisGridOpponent(newOpponentTetrisGrid)
+        }
+      }
+      else {
+      }
+
+      setServerMessages(serverMessages => [...serverMessages, ...serverMessagesList])
+    };
   }, []);
+
+  const requestGameStart = () => {
+    const msg = new GameMessage(characterId, "REQUESTSTART", gameId).toString();
+    ws.send(msg)
+  }
 
   const startGame = () => {
     if (!timer) {
       clearInterval(timer);
     }
+
+    generateNextBlock();
     timer = setInterval(() => {
       // Make sure tick receive the latest tetrisGrid value
-      setTetrisGrid(grid => { return tick(grid, nextBlock) })
+      setTetrisGrid(grid => { 
+        const newGrid = tick(grid, nextBlock)
+        // send your current grid to your opponent
+        const msg = new GameMessage(characterId, "TICK", JSON.stringify(newGrid)).toString();
+        ws.send(msg);
+        return newGrid;
+      })
     }, speed)
+  }
+
+
+  const tryAgain = () => {
+    setMyScore(0)
+    setOpponentScore(0)
+    setIsGameOver(false)
+
+    var grid1 = createGrid();
+    setTetrisGrid(grid1);
+    var grid2 = createGrid();
+    setTetrisGridOpponent(grid2);
+    startGame();
   }
 
   const tick = (grid: number[][], nextBlock: Block) => {
@@ -73,11 +174,11 @@ const GamePanel = (props: any) => {
 
   const generateNextBlock = () => {
     //setNextBlock(nextBlock => { return fact.generateBlock("l", [10,w/2])})
-    
+
     nextBlock = fact.generateBlock(
-      blockTypes[getRandomInt(0, blockTypes.length)], 
+      blockTypes[getRandomInt(0, blockTypes.length)],
       [1, w / 2]
-      );
+    );
   }
 
 
@@ -174,11 +275,67 @@ const GamePanel = (props: any) => {
     setTetrisGrid(tetrisGridClone)
   }
 
+  const registerNewGame = () => {
+    const msg = new GameMessage(characterId, "NEWGAME").toString();
+    console.log(msg)
+    ws.send(msg)
+  }
+
+  const joinGame = (gameId: string) => {
+    ws.send(new GameMessage(characterId, "JOINGAME", gameId).toString())
+  }
+
+  const renderStart = () => {
+    return (
+      <Modal
+        animationType={"slide"}
+        // transparent={true}
+        visible={isGameOver}
+        style={{ flex: 1 }}
+      >
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,.5)' }}>
+          <Text style={{ fontSize: 64, fontWeight: '800' }}>
+            <Text style={{ color: 'blue' }}>T</Text>
+            <Text style={{ color: 'orange' }}>E</Text>
+            <Text style={{ color: 'yellow' }}>T</Text>
+            <Text style={{ color: 'green' }}>R</Text>
+            <Text style={{ color: 'red' }}>I</Text>
+            <Text style={{ color: 'cyan' }}>S</Text>
+          </Text>
+
+          <TouchableOpacity onPress={() => registerNewGame()}>
+            <Text style={{ fontSize: 32, color: 'white', fontWeight: '500' }}>
+              Host Game
+            </Text>
+          </TouchableOpacity>
+
+
+          <View style={{ flex: 1, flexDirection: 'row', alignItems: 'flex-start', }}>
+            <TouchableOpacity onPress={() => joinGame(gameId)}>
+              <Text style={{ fontSize: 32, color: 'white', fontWeight: '500', }}>
+                Join
+              </Text>
+            </TouchableOpacity>
+            <TextInput style={styles.modelTextInput}
+              value={gameId}
+              placeholder="Game ID..."
+              onChangeText={newText => setGameId(newText)}
+            >
+            </TextInput>
+
+          </View>
+
+        </View>
+      </Modal>
+    )
+  }
+
   return (
     <View style={{ flexDirection: 'column', justifyContent: 'space-around' }}>
 
       <View style={{ paddingTop: 10, justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ fontWeight: '700', fontSize: 26 }}>TETRIS ONLINE</Text>
+        <Text style={{ fontWeight: '700', fontSize: 26 }}>TETRIS ONLINE </Text>
+        <Text style={{ fontWeight: '700', fontSize: 26 }}> GAME ID = {gameId}</Text>
       </View>
 
       <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
@@ -201,9 +358,15 @@ const GamePanel = (props: any) => {
           </View>
         </View>
 
-        <View style={{ marginHorizontal: 35, alignItems: 'center' }}>
+        <View style={{ marginHorizontal: 35, alignItems: 'center', flexDirection: 'column' }}>
           <Text style={{ fontSize: 16, fontWeight: '600' }}>NEXT</Text>
+          <TouchableOpacity onPress={() => requestGameStart()} >
+            <Text style={{ fontSize: 16, fontWeight: '500', borderWidth: 3, }}>
+              {'START'}
+            </Text>
+          </TouchableOpacity>
         </View>
+
 
         <View style={{ paddingTop: 10, flexDirection: 'column', alignItems: 'center' }}>
           <View style={{ justifyContent: 'center', alignItems: 'center' }}>
@@ -220,8 +383,24 @@ const GamePanel = (props: any) => {
           </TouchableOpacity>
         </View>
 
+
+        <View style={styles.logger}>
+          <ScrollView style={{width:300, height: 300}}>
+            {
+              serverMessages.map((item, ind) => {
+                return (
+                  <Text key={ind}>
+                    {item}
+                  </Text>
+                )
+              })
+            }
+          </ScrollView>
+        </View>
+
       </View>
 
+      {renderStart()}
     </View>
   );
 
@@ -231,7 +410,20 @@ const styles = StyleSheet.create({
   img: {
     width: 50,
     height: 50
-  }
+  },
+  modelTextInput: {
+    marginHorizontal: 10,
+    fontSize: 32,
+    borderWidth: 3,
+    height: 'auto',
+  },
+  logger: {
+    backgroundColor: '#ffeece',
+    flexGrow: 1,
+    borderWidth: 3,
+    marginHorizontal: 10,
+    display: 'none'
+  },
 });
 
 
