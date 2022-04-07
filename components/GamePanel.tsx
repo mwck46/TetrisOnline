@@ -49,7 +49,8 @@ const GamePanel = (props: any) => {
     let tetrisGridClone = nextBlock?.translate(grid, 'down');
     if (!tetrisGridClone) {
       console.log("cannot drop")
-      turnBlockToGray(grid);
+      grid = turnBlockToGray(grid);
+      grid = clearOutGrid(grid);
       generateNextBlock();
       tetrisGridClone = grid;
     }
@@ -63,6 +64,11 @@ const GamePanel = (props: any) => {
       const colIdx = nextBlock.currCoord[1] + p[1];
       grid[rowIdx][colIdx] = Color.Gray;
     }
+    return grid;
+  }
+
+  const clearOutGrid = (grid: number[][]) => {
+    return grid;
   }
 
   const generateNextBlock = () => {
