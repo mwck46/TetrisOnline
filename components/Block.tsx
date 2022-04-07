@@ -14,7 +14,16 @@ export class Block {
   }
 
   canRotate(tetrisGrid: number[][], points: number[][]) {
-    return true;
+    let canRotate = true;
+    let lowerBound = 0;
+    let upperBound = tetrisGrid.length - 1;
+    for (let p of points) {
+      if (p[0] < lowerBound || p[0] > upperBound) {
+        canRotate = false;
+        break;
+      }
+    }
+    return canRotate;
   }
 
   // No need to clone the tetrisGrid before pass it here
@@ -57,13 +66,13 @@ export class Block {
     return tetrisGridClone;
   }
 
-  canShift() {
+  // canShift() {
 
-  }
+  // }
 
-  shift() {
+  // shift() {
 
-  }
+  // }
 
   canDrop(tetrisGrid: number[][], points: number[][]) {
     for (let p of points) {
@@ -77,6 +86,18 @@ export class Block {
         console.log(p[0], p[1], tetrisGrid[p[0]][p[1]]);
         return false;
       }
+    }
+    return true;
+  }
+
+  canShift(tetrisGrid: number[][], direction: string) {
+    switch (direction) {
+      case 'down': 
+      break;
+      case 'left': 
+      break;
+      case 'right': 
+      break;
     }
     return true;
   }
