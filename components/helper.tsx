@@ -13,5 +13,5 @@ export class Color {
     static Orange = 3;
     static Yellow = 4;
     static Purple = 5;
-    static Gray = -1;
+    static Gray = 10;
 }

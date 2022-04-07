@@ -1,3 +1,4 @@
+import { Color } from "./helper";
 
 export class Block {
   currOrientationIdx: number;
@@ -66,15 +67,7 @@ export class Block {
     return tetrisGridClone;
   }
 
-  // canShift() {
-
-  // }
-
-  // shift() {
-
-  // }
-
-  canDrop(tetrisGrid: number[][], points: number[][]) {
+  canTranslate(tetrisGrid: number[][], points: number[][]) {
     for (let p of points) {
       if(p[0] >= tetrisGrid.length){
         console.log(p[0], p[1], tetrisGrid.length);
@@ -86,18 +79,6 @@ export class Block {
         console.log(p[0], p[1], tetrisGrid[p[0]][p[1]]);
         return false;
       }
-    }
-    return true;
-  }
-
-  canShift(tetrisGrid: number[][], direction: string) {
-    switch (direction) {
-      case 'down': 
-      break;
-      case 'left': 
-      break;
-      case 'right': 
-      break;
     }
     return true;
   }
@@ -132,7 +113,7 @@ export class Block {
       points.push([rowIdx, colIdx])
     }
 
-    if (!this.canDrop(tetrisGridClone, points)) {
+    if (!this.canTranslate(tetrisGridClone, points)) {
       return null;
     }
 

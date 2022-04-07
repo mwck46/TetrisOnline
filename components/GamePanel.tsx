@@ -36,7 +36,7 @@ const GamePanel = (props: any) => {
   const [opponentScore, setOpponentScore] = useState(0);
   const [serverMessages, setServerMessages] = useState<string[]>([]);
   //const [nextBlock, setNextBlock] = useState<Block>();
-  const [speed, setSpeed] = useState(500);
+  const [speed, setSpeed] = useState(700);
   const [gameId, setGameId] = useState('');
   var timer: NodeJS.Timer;
   const fact = new TetrisBlockFactory();
@@ -161,14 +161,34 @@ const GamePanel = (props: any) => {
 
   const turnBlockToGray = (grid: number[][]) => {
     for (let p of nextBlock.orientations[nextBlock.currOrientationIdx]) {
-      const rowIdx = nextBlock.currCoord[0] + p[0];
-      const colIdx = nextBlock.currCoord[1] + p[1];
+      var rowIdx = nextBlock.currCoord[0] + p[0];
+      var colIdx = nextBlock.currCoord[1] + p[1];
+      console.log(rowIdx, colIdx, grid[rowIdx][colIdx]);
       grid[rowIdx][colIdx] = Color.Gray;
     }
     return grid;
   }
 
   const clearOutGrid = (grid: number[][]) => {
+    let clearRow = [];
+    for (let p of nextBlock.orientations[nextBlock.currOrientationIdx]) {
+      var rowIdx = nextBlock.currCoord[0] + p[0];
+      let canClear = true;
+      for (let i = 0; i < w; i++) {
+        if (grid[rowIdx][i] === Color.White) {
+          canClear = false;
+          break;
+        }
+      }
+      if (canClear) {
+        clearRow.push(rowIdx);
+      }
+    }
+    if (clearRow.length > 0) {
+      for (let p of clearRow.sort()) {
+        grid = removeRow(grid, p);
+      }
+    }
     return grid;
   }
 
@@ -200,8 +220,19 @@ const GamePanel = (props: any) => {
     return grid;
   }
 
+  const removeRow = (grid: number[][], index: number) => {
+    var row = [];
+    for (let j = 1; j <= w; j++) {
+      var cell = 0;
+      row.push(cell);
+    }
+    grid.splice(index, 1);
+    grid.unshift(row);
+    return grid;
+  }
+
   const renderCells = (grid: number[][]) => {
-    console.log('renderCells');
+    // console.log('renderCells');
     const cellSize = 15
 
     // Array.prototype.map(), create new array by populate the results 
@@ -239,6 +270,8 @@ const GamePanel = (props: any) => {
               color = 'yellow';
             } else if (cell == 5) {
               color = 'purple';
+            } else if (cell == Color.Gray) {
+              color = 'gray';
             }
 
             if (i < 4) {
