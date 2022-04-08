@@ -10,8 +10,6 @@ export class Block {
     this.orientations = orientations;
     this.currCoord = initCoord;
     this.color = color;
-
-    console.log("Block l generated")
   }
 
   canRotate(tetrisGrid: number[][], points: number[][]) {

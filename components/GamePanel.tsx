@@ -35,6 +35,7 @@ const GamePanel = (props: any) => {
   const [myScore, setMyScore] = useState(0);
   const [opponentScore, setOpponentScore] = useState(0);
   const [serverMessages, setServerMessages] = useState<string[]>([]);
+  const [nextBlockQueue, setNextBlockQueue] = useState<number[]>([]);
   //const [nextBlock, setNextBlock] = useState<Block>();
   const [speed, setSpeed] = useState(700);
   const [gameId, setGameId] = useState('');
@@ -52,7 +53,7 @@ const GamePanel = (props: any) => {
 
     ws = new WebSocket(url);
     console.log("ws = ", ws)
-    
+
     ws.onopen = () => {
       const serverMessagesList: string[] = [];
       serverMessagesList.push('Connected')
@@ -72,29 +73,37 @@ const GamePanel = (props: any) => {
       const serverMessagesList: string[] = [];
       serverMessagesList.push(e.data)
 
-      console.log(e.data)
+      //console.log(e.data)
       const msgObj = GameMessage.parseFromSocket(e.data)
-      console.log(msgObj)
+      //console.log(msgObj)
 
       if (msgObj.sender === "SERVER") {
-        if(msgObj.message === "GAMEID"){
+        if (msgObj.message === "GAMEID") {
           setGameId(msgObj.remarks);
           setIsGameOver(false);
-        }else if(msgObj.message === "JOINGAME"){
-          if(msgObj.remarks === "OK"){
+        } else if (msgObj.message === "JOINGAME") {
+          if (msgObj.remarks === "OK") {
             setIsGameOver(false);
-          }else{
+          } else {
             serverMessagesList.push("Cannot join game")
           }
-        }else if(msgObj.message === "GAMESTART"){
+        } else if (msgObj.message === "GAMESTART") {
+          const nextNBlocks: number[] = JSON.parse(msgObj.remarks)
+          console.log("game start")
+          console.log(nextNBlocks)
+          setNextBlockQueue(nextBlockQueue => [...nextBlockQueue, ...nextNBlocks]);
           startGame();
           serverMessagesList.push("Game start")
-        }else if(msgObj.message === "ERROR"){
+        } else if (msgObj.message === "NEWBLOCK") {
+          const nextNBlocks: number[] = JSON.parse(msgObj.remarks)
+          setNextBlockQueue(nextBlockQueue => [...nextBlockQueue, ...nextNBlocks]);
+          serverMessagesList.push("received new block")
+        } else if (msgObj.message === "ERROR") {
           serverMessagesList.push(`[Error] ${msgObj.remarks}`)
         }
 
       } else if (msgObj.sender === "RIVAL") {
-        if(msgObj.message === "TICK"){
+        if (msgObj.message === "TICK") {
           const newOpponentTetrisGrid = JSON.parse(msgObj.remarks)
           setTetrisGridOpponent(newOpponentTetrisGrid)
         }
@@ -105,6 +114,16 @@ const GamePanel = (props: any) => {
       setServerMessages(serverMessages => [...serverMessages, ...serverMessagesList])
     };
   }, []);
+
+  useEffect(() => {
+    if(!gameId || !ws){
+      return
+    }
+    if(nextBlockQueue.length < 20){
+      const msg = new GameMessage(characterId, "REQUESTBLOCK", gameId).toString();
+      ws.send(msg)
+    }
+  }, [nextBlockQueue]);
 
   const requestGameStart = () => {
     const msg = new GameMessage(characterId, "REQUESTSTART", gameId).toString();
@@ -119,7 +138,7 @@ const GamePanel = (props: any) => {
     generateNextBlock();
     timer = setInterval(() => {
       // Make sure tick receive the latest tetrisGrid value
-      setTetrisGrid(grid => { 
+      setTetrisGrid(grid => {
         const newGrid = tick(grid, nextBlock)
         // send your current grid to your opponent
         const msg = new GameMessage(characterId, "TICK", JSON.stringify(newGrid)).toString();
@@ -200,12 +219,17 @@ const GamePanel = (props: any) => {
   }
 
   const generateNextBlock = () => {
-    //setNextBlock(nextBlock => { return fact.generateBlock("l", [10,w/2])})
-
-    nextBlock = fact.generateBlock(
-      blockTypes[getRandomInt(0, blockTypes.length)],
-      [1, w / 2]
-    );
+    setNextBlockQueue(nextBlockQueue => {
+      //console.log(nextBlockQueue)
+      let blkType = nextBlockQueue.shift();
+      //console.log("nexblock = ", blkType)
+      //console.log(nextBlockQueue)
+      nextBlock = fact.generateBlock(
+        blockTypes[(blkType) ? blkType : 0],
+        [1, w / 2]
+      );
+      return [...nextBlockQueue]
+    });
   }
 
 
@@ -317,7 +341,7 @@ const GamePanel = (props: any) => {
 
   const registerNewGame = () => {
     const msg = new GameMessage(characterId, "NEWGAME").toString();
-    console.log(msg)
+    //console.log(msg)
     ws.send(msg)
   }
 
@@ -425,7 +449,7 @@ const GamePanel = (props: any) => {
 
 
         <View style={styles.logger}>
-          <ScrollView style={{width:300, height: 300}}>
+          <ScrollView style={{ width: 300, height: 300 }}>
             {
               serverMessages.map((item, ind) => {
                 return (
