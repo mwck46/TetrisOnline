@@ -152,6 +152,7 @@ const GamePanel = (props: any) => {
       console.log("cannot drop")
       grid = turnBlockToGray(grid);
       grid = clearOutGrid(grid);
+      checkIfIsGameOver(grid);
       generateNextBlock();
       tetrisGridClone = grid;
     }
@@ -180,7 +181,7 @@ const GamePanel = (props: any) => {
           break;
         }
       }
-      if (canClear) {
+      if (canClear && clearRow.indexOf(rowIdx) === -1) {
         clearRow.push(rowIdx);
       }
     }
@@ -190,6 +191,12 @@ const GamePanel = (props: any) => {
       }
     }
     return grid;
+  }
+
+  const checkIfIsGameOver = (grid: number[][]) => {
+    if (grid[0][5] === Color.Gray) {
+      setIsGameOver(true);
+    }
   }
 
   const generateNextBlock = () => {
