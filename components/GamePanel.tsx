@@ -149,8 +149,8 @@ const GamePanel = (props: any) => {
     generateNextBlock();
     timer = setInterval(() => {
       // Make sure tick receive the latest tetrisGrid value
-      setTetrisGrid(grid => {
-        const newGrid = tick(grid, nextBlock)
+      setTetrisGrid(grid => { 
+        const newGrid = tick(grid, nextBlock);
         // send your current grid to your opponent
         const msg = new GameMessage(characterId, "TICK", JSON.stringify(newGrid)).toString();
         ws.send(msg);
@@ -161,9 +161,8 @@ const GamePanel = (props: any) => {
 
 
   const tryAgain = () => {
-    setMyScore(0)
-    setOpponentScore(0)
-    setIsGameOver(false)
+    setMyScore(0);
+    setOpponentScore(0);
 
     var grid1 = create2dArray(w, h);
     setTetrisGrid(grid1);
@@ -182,7 +181,12 @@ const GamePanel = (props: any) => {
       console.log("cannot drop")
       grid = turnBlockToGray(grid);
       grid = clearOutGrid(grid);
-      checkIfIsGameOver(grid);
+      var IsGameOver = checkIfIsGameOver(grid);
+      if (IsGameOver)
+      {
+        clearInterval(timer);
+        return create2dArray(w,h);
+      }
       generateNextBlock();
       tetrisGridClone = grid;
     }
@@ -224,9 +228,7 @@ const GamePanel = (props: any) => {
   }
 
   const checkIfIsGameOver = (grid: number[][]) => {
-    if (grid[0][5] === ColorCode.Gray) {
-      setIsGameOver(true);
-    }
+    return (grid[0][5] !== ColorCode.White);
   }
 
   const generateNextBlock = () => {
