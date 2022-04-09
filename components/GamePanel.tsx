@@ -139,13 +139,8 @@ const GamePanel = (props: any) => {
     generateNextBlock();
     timer = setInterval(() => {
       // Make sure tick receive the latest tetrisGrid value
-<<<<<<< Updated upstream
-      setTetrisGrid(grid => {
-        const newGrid = tick(grid, nextBlock)
-=======
       setTetrisGrid(grid => { 
         const newGrid = tick(grid, nextBlock);
->>>>>>> Stashed changes
         // send your current grid to your opponent
         const msg = new GameMessage(characterId, "TICK", JSON.stringify(newGrid)).toString();
         ws.send(msg);
@@ -180,7 +175,7 @@ const GamePanel = (props: any) => {
       if (IsGameOver)
       {
         clearInterval(timer);
-        return createGrid();
+        return create2dArray(w,h);
       }
       generateNextBlock();
       tetrisGridClone = grid;
@@ -193,12 +188,8 @@ const GamePanel = (props: any) => {
     for (let p of nextBlock.orientations[nextBlock.currOrientationIdx]) {
       var rowIdx = nextBlock.currCoord[0] + p[0];
       var colIdx = nextBlock.currCoord[1] + p[1];
-<<<<<<< Updated upstream
       console.log(rowIdx, colIdx, grid[rowIdx][colIdx]);
       grid[rowIdx][colIdx] = ColorCode.Gray;
-=======
-      grid[rowIdx][colIdx] = Color.Gray;
->>>>>>> Stashed changes
     }
     return grid;
   }
@@ -227,13 +218,7 @@ const GamePanel = (props: any) => {
   }
 
   const checkIfIsGameOver = (grid: number[][]) => {
-<<<<<<< Updated upstream
-    if (grid[0][5] === ColorCode.Gray) {
-      setIsGameOver(true);
-    }
-=======
-    return (grid[0][5] !== Color.White);
->>>>>>> Stashed changes
+    return (grid[0][5] !== ColorCode.White);
   }
 
   const generateNextBlock = () => {
