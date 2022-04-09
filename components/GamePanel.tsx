@@ -8,6 +8,7 @@ import { GameMessage } from "./GameMessage"
 import { getRandomInt, Color } from "./helper"
 
 import { Block, TetrisBlockFactory } from "./Block"
+import PreviewPanel from './PreviewPanel';
 
 const { manifest } = Constants;
 const characterId = uuid.v4().toString();
@@ -22,8 +23,8 @@ if (!manifest?.debuggerHost) {
 var ws: WebSocket;
 
 
+const CELL_SIZE = 15
 const tetrisGridInit: number[][] = []
-const blockTypes: string[] = ["l", "L", "J", "o", /*"s", "z",  "T"*/]
 var nextBlock: Block;
 
 const GamePanel = (props: any) => {
@@ -225,7 +226,7 @@ const GamePanel = (props: any) => {
       //console.log("nexblock = ", blkType)
       //console.log(nextBlockQueue)
       nextBlock = fact.generateBlock(
-        blockTypes[(blkType) ? blkType : 0],
+        TetrisBlockFactory.blockTypes[(blkType) ? blkType : 0],
         [1, w / 2]
       );
       return [...nextBlockQueue]
@@ -264,7 +265,6 @@ const GamePanel = (props: any) => {
 
   const renderCells = (grid: number[][]) => {
     // console.log('renderCells');
-    const cellSize = 15
 
     // Array.prototype.map(), create new array by populate the results 
     // of calling a provided function on every element in the calling array.
@@ -278,7 +278,7 @@ const GamePanel = (props: any) => {
             {row.map((cell, j) => {
               return (
                 <TouchableOpacity key={j}>
-                  <Cell key={i + ',' + j} color={'white'} size={cellSize} />
+                  <Cell key={i + ',' + j} color={'white'} size={CELL_SIZE} />
                 </TouchableOpacity>
               )
             })}
@@ -311,7 +311,7 @@ const GamePanel = (props: any) => {
 
             return (
               <TouchableOpacity key={j} >
-                <Cell key={i + ',' + j} borderWidth={1} color={color} size={cellSize} />
+                <Cell key={i + ',' + j} borderWidth={1} color={color} size={CELL_SIZE} />
               </TouchableOpacity>
             )
           })}
@@ -423,7 +423,7 @@ const GamePanel = (props: any) => {
         </View>
 
         <View style={{ marginHorizontal: 35, alignItems: 'center', flexDirection: 'column' }}>
-          <Text style={{ fontSize: 16, fontWeight: '600' }}>NEXT</Text>
+          <PreviewPanel nextBlockQueue={nextBlockQueue}/>
           <TouchableOpacity onPress={() => requestGameStart()} >
             <Text style={{ fontSize: 16, fontWeight: '500', borderWidth: 3, }}>
               {'START'}

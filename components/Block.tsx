@@ -24,6 +24,24 @@ export class Block {
     }
     return canRotate;
   }
+  
+  drawBlock(tetrisGrid: number[][]) {
+    let tetrisGridClone = tetrisGrid.map((row) => { return [...row] })
+
+    // get new points
+    let points = []
+    for (let p of this.orientations[this.currOrientationIdx]) {
+      const rowIdx = this.currCoord[0] + p[0];
+      const colIdx = this.currCoord[1] + p[1];
+      points.push([rowIdx, colIdx])
+    }
+
+    for (let p of points) {
+      tetrisGridClone[p[0]][p[1]] = this.color;
+    }
+
+    return tetrisGridClone;
+  }
 
   // No need to clone the tetrisGrid before pass it here
   rotate(tetrisGrid: number[][]) {
@@ -128,6 +146,8 @@ export class Block {
 }
 
 export class TetrisBlockFactory {
+  static blockTypes: string[] = ["l", "L", "J", "o", /*"s", "z",  "T"*/]
+
   generateBlock(blockType: string, initCoord: number[]) {
     // CAUTION! +ve y points downward! 
     if (blockType === 'l') {
