@@ -17,7 +17,7 @@ export class Block {
     let lowerBound = 0;
     let upperBound = tetrisGrid.length - 1;
     for (let p of points) {
-      if ((this.currCoord[0] + p[0]) < lowerBound || (this.currCoord[0] + p[0]) > upperBound) {
+      if (p[1] < lowerBound || p[1] > upperBound) {
         canRotate = false;
         break;
       }
