@@ -36,7 +36,7 @@ const GamePanel = (props: any) => {
   const [myScore, setMyScore] = useState(0);
   const [opponentScore, setOpponentScore] = useState(0);
   const [serverMessages, setServerMessages] = useState<string[]>([]);
-  const [nextBlockQueue, setNextBlockQueue] = useState<number[]>([]);
+  const [nextBlockQueue, setNextBlockQueue] = useState<number[]>([-1,-1,-1,-1]);
   //const [nextBlock, setNextBlock] = useState<Block>();
   const [speed, setSpeed] = useState(700);
   const [gameId, setGameId] = useState('');
