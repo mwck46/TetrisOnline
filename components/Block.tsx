@@ -15,7 +15,7 @@ export class Block {
   canRotate(tetrisGrid: number[][], points: number[][]) {
     let canRotate = true;
     let lowerBound = 0;
-    let upperBound = tetrisGrid.length - 1;
+    let upperBound = tetrisGrid[0].length - 1;
     for (let p of points) {
       if (p[1] < lowerBound || p[1] > upperBound) {
         canRotate = false;
