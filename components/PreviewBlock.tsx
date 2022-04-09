@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 
 import Cell from './Cell';
 import { Block, TetrisBlockFactory } from './Block'
-import { Color } from "./helper"
+import { ColorCode, ColorTable, create2dArray } from "./helper"
 
 const factory = new TetrisBlockFactory();
 var blk: Block;
@@ -15,26 +15,10 @@ const PreviewBlock = (props: any) => {
 
   useEffect(() => {
     blk = factory.generateBlock(TetrisBlockFactory.blockTypes[blkType], [2, 2])
-    let grid = createBlockGrid();
+    let grid = create2dArray(6, 6);
     grid = blk?.drawBlock(grid);
     setGrid(grid);
   }, [blkType]);
-
-  const createBlockGrid = () => {
-    const width: number = 6;
-    const height: number = 6;
-    var grid = [];
-    var row = [];
-    for (let i = 0; i < height; i++) {
-      for (let j = 0; j < width; j++) {
-        row.push(0);
-      }
-      grid.push(row);
-      row = [];
-    }
-
-    return grid;
-  }
 
   const renderBlockGrid = (grid: number[][]) => {
     return (
@@ -44,20 +28,7 @@ const PreviewBlock = (props: any) => {
             return (
               <View key={i} style={{ flexDirection: 'row' }}>
                 {row.map((cell, j) => {
-                  var color = 'white';
-                  if (cell == Color.Blue) {
-                    color = 'blue';
-                  } else if (cell == Color.Green) {
-                    color = 'green';
-                  } else if (cell == 3) {
-                    color = 'orange';
-                  } else if (cell == 4) {
-                    color = 'yellow';
-                  } else if (cell == 5) {
-                    color = 'purple';
-                  } else if (cell == Color.Gray) {
-                    color = 'gray';
-                  }
+                  let color = ColorTable.getColor(cell)
 
                   return (
                     <Cell key={i + ',' + j} borderWidth={0} color={color} size={CELL_SIZE} />
@@ -72,7 +43,7 @@ const PreviewBlock = (props: any) => {
   }
 
   return (
-    <View style={{ marginBottom: 10 }}>
+    <View style={{ marginBottom: 5 }}>
       {renderBlockGrid(prevGrid)}
     </View>
   )

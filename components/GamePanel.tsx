@@ -5,7 +5,7 @@ import Constants from "expo-constants";
 
 import Cell from "./Cell"
 import { GameMessage } from "./GameMessage"
-import { getRandomInt, Color } from "./helper"
+import { getRandomInt, ColorCode, ColorTable, create2dArray } from "./helper"
 
 import { Block, TetrisBlockFactory } from "./Block"
 import PreviewPanel from './PreviewPanel';
@@ -46,10 +46,10 @@ const GamePanel = (props: any) => {
   // React hook equivalent to componentDidMount
   // https://stackoverflow.com/a/54655508/9265852
   useEffect(() => {
-    var grid1 = createGrid();
+    var grid1 = create2dArray(w, h);
     setTetrisGrid(grid1);
 
-    var grid2 = createGrid();
+    var grid2 = create2dArray(w, h);
     setTetrisGridOpponent(grid2);
 
     ws = new WebSocket(url);
@@ -117,10 +117,10 @@ const GamePanel = (props: any) => {
   }, []);
 
   useEffect(() => {
-    if(!gameId || !ws){
+    if (!gameId || !ws) {
       return
     }
-    if(nextBlockQueue.length < 20){
+    if (nextBlockQueue.length < 20) {
       const msg = new GameMessage(characterId, "REQUESTBLOCK", gameId).toString();
       ws.send(msg)
     }
@@ -155,9 +155,9 @@ const GamePanel = (props: any) => {
     setOpponentScore(0)
     setIsGameOver(false)
 
-    var grid1 = createGrid();
+    var grid1 = create2dArray(w, h);
     setTetrisGrid(grid1);
-    var grid2 = createGrid();
+    var grid2 = create2dArray(w, h);
     setTetrisGridOpponent(grid2);
     startGame();
   }
@@ -185,7 +185,7 @@ const GamePanel = (props: any) => {
       var rowIdx = nextBlock.currCoord[0] + p[0];
       var colIdx = nextBlock.currCoord[1] + p[1];
       console.log(rowIdx, colIdx, grid[rowIdx][colIdx]);
-      grid[rowIdx][colIdx] = Color.Gray;
+      grid[rowIdx][colIdx] = ColorCode.Gray;
     }
     return grid;
   }
@@ -196,7 +196,7 @@ const GamePanel = (props: any) => {
       var rowIdx = nextBlock.currCoord[0] + p[0];
       let canClear = true;
       for (let i = 0; i < w; i++) {
-        if (grid[rowIdx][i] === Color.White) {
+        if (grid[rowIdx][i] === ColorCode.White) {
           canClear = false;
           break;
         }
@@ -214,7 +214,7 @@ const GamePanel = (props: any) => {
   }
 
   const checkIfIsGameOver = (grid: number[][]) => {
-    if (grid[0][5] === Color.Gray) {
+    if (grid[0][5] === ColorCode.Gray) {
       setIsGameOver(true);
     }
   }
@@ -231,25 +231,6 @@ const GamePanel = (props: any) => {
       );
       return [...nextBlockQueue]
     });
-  }
-
-
-  const createGrid = () => {
-    //console.log("createGrid()")
-
-    var grid = []; var row = [];
-    var row = [];
-
-    for (let i = 1; i <= h; i++) {
-      for (let j = 1; j <= w; j++) {
-        var cell = 0;
-        row.push(cell);
-      }
-      grid.push(row);
-      row = [];
-    }
-
-    return grid;
   }
 
   const removeRow = (grid: number[][], index: number) => {
@@ -284,39 +265,20 @@ const GamePanel = (props: any) => {
             })}
           </View>
         )
+      } else {
+        return (
+          <View key={i} style={{ flexDirection: 'row' }}>
+            {row.map((cell, j) => {
+              let color = ColorTable.getColor(cell)
+              return (
+                <TouchableOpacity key={j} >
+                  <Cell key={i + ',' + j} borderWidth={1} color={color} size={CELL_SIZE} />
+                </TouchableOpacity>
+              )
+            })}
+          </View>
+        )
       }
-
-      return (
-        <View key={i} style={{ flexDirection: 'row' }}>
-          {row.map((cell, j) => {
-            // console.log('color is:', cell)
-            var color = 'white';
-            if (cell == Color.Blue) {
-              color = 'blue';
-            } else if (cell == Color.Green) {
-              color = 'green';
-            } else if (cell == 3) {
-              color = 'orange';
-            } else if (cell == 4) {
-              color = 'yellow';
-            } else if (cell == 5) {
-              color = 'purple';
-            } else if (cell == Color.Gray) {
-              color = 'gray';
-            }
-
-            if (i < 4) {
-              color = 'red';
-            }
-
-            return (
-              <TouchableOpacity key={j} >
-                <Cell key={i + ',' + j} borderWidth={1} color={color} size={CELL_SIZE} />
-              </TouchableOpacity>
-            )
-          })}
-        </View>
-      )
     })
   }
 
@@ -423,7 +385,7 @@ const GamePanel = (props: any) => {
         </View>
 
         <View style={{ marginHorizontal: 35, alignItems: 'center', flexDirection: 'column' }}>
-          <PreviewPanel nextBlockQueue={nextBlockQueue}/>
+          <PreviewPanel nextBlockQueue={nextBlockQueue} />
           <TouchableOpacity onPress={() => requestGameStart()} >
             <Text style={{ fontSize: 16, fontWeight: '500', borderWidth: 3, }}>
               {'START'}

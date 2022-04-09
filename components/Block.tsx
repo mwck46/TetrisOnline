@@ -1,4 +1,4 @@
-import { Color } from "./helper";
+import { ColorCode } from "./helper";
 
 export class Block {
   currOrientationIdx: number;
@@ -146,7 +146,7 @@ export class Block {
 }
 
 export class TetrisBlockFactory {
-  static blockTypes: string[] = ["l", "L", "J", "o", /*"s", "z",  "T"*/]
+  static blockTypes: string[] = ["s", "z",  "T", "l", "L", "J", "o", ]
 
   generateBlock(blockType: string, initCoord: number[]) {
     // CAUTION! +ve y points downward! 
@@ -157,8 +157,9 @@ export class TetrisBlockFactory {
         [[1, 0], [0, 0], [-1, 0], [-2, 0]],
         [[0, -2], [0, -1], [0, 0], [0, +1]],
       ]
-      const color = 1;
+      const color = ColorCode.BLK_l;
       const b = new Block(orientations, initCoord, color);
+      console.log("l")
       return b;
     } else if (blockType === 'L') {
       const orientations = [
@@ -167,8 +168,9 @@ export class TetrisBlockFactory {
         [[-2, 0], [-1, 0], [0, 0], [0, 1]],
         [[0,2], [0, 1], [0, 0], [+1, 0]],
       ]
-      const color = 2;
+      const color = ColorCode.BLK_L;
       const b = new Block(orientations, initCoord, color);
+      console.log("L")
       return b;
     } else if (blockType === 'J') {
       const orientations = [
@@ -177,22 +179,54 @@ export class TetrisBlockFactory {
         [[0, -1], [0, 0], [-1, 0], [-2, 0]],
         [[0, 2], [0, 1], [0, 0], [-1, 0]],
       ]
-      const color = 3;
+      const color = ColorCode.BLK_J;
       const b = new Block(orientations, initCoord, color);
+      console.log("J")
       return b;
     } else if (blockType === 'o') {
       const orientations = [
         [[1, 1], [1, 0], [0, 0], [0, 1]],
       ]
-      const color = 4;
+      const color = ColorCode.BLK_o;
       const b = new Block(orientations, initCoord, color);
+      console.log("o")
+      return b;
+    } else if (blockType === 's') {
+      const orientations = [
+        [[-1, 1], [-1, 0], [0, 0], [0, -1]],
+        [[-1, 0], [0, 0], [0, 1], [1, 1]],
+        [[0, 1], [0, 0], [1, 0], [1, -1]],
+        [[-1, -1], [0, -1], [0, 0], [1, 0]],
+      ]
+      const color = ColorCode.BLK_s;
+      const b = new Block(orientations, initCoord, color);
+      console.log("s")
+      return b;
+    } else if (blockType === 'z') {
+      const orientations = [
+        [[-1, -1], [-1, 0], [0, 0], [0, 1]],
+        [[1, 0], [0, 0], [0, 1], [-1, 1]],
+        [[0, -1], [0, 0], [1, 0], [1, 1]],
+        [[-1, 0], [0, 0], [0, -1], [1, -1]],
+      ]
+      const color = ColorCode.BLK_z;
+      const b = new Block(orientations, initCoord, color);
+      console.log("z")
+      return b;
+    } else if (blockType === 'T') {
+      const orientations = [
+        [[-1, 0], [0, 1], [0, 0], [0, -1]],
+        [[-1, 0], [0, 1], [0, 0], [1, 0]],
+        [[1, 0], [0, 1], [0, 0], [0, -1]],
+        [[-1, 0], [0, -1], [0, 0], [1, 0]],
+      ]
+      const color = ColorCode.BLK_T;
+      const b = new Block(orientations, initCoord, color);
+      console.log("T");
       return b;
     } else {
       const orientations = [
-        [[2, 0], [1, 0], [0, 0], [-1, 0]],
-        [[0, -1], [0, 0], [0, +1], [0, +2]],
-        [[1, 0], [0, 0], [-1, 0], [-2, 0]],
-        [[0, -2], [0, -1], [0, 0], [0, +1]],
+        [[0, 0], [0, 0], [0, 0], [0, 0]],
       ]
       const color = 1;
       const b = new Block(orientations, initCoord, color);

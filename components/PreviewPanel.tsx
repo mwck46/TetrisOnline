@@ -12,7 +12,7 @@ const PreviewPanel = (props: any) => {
     }, [nextBlockQueue])
 
   return (
-    <View style={{ paddingLeft: 10, alignItems: 'center' }}>
+    <View style={{ alignItems: 'center' }}>
       <Text style={{ fontSize: 16, fontWeight: '600' }}>NEXT</Text>
       {
         visBlockQueue.map((blockType: number, idx: number) => {
