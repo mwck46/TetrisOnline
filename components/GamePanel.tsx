@@ -14,7 +14,7 @@ const { manifest } = Constants;
 const characterId = uuid.v4().toString();
 var url = ""
 if (!manifest?.debuggerHost) {
-  url = 'ws://192.168.1.210:18080';
+  url = 'ws://localhost:18080';
 } else {
   url = `ws://${manifest.debuggerHost.split(':').shift()}:18080`;
 }
