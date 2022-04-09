@@ -24,7 +24,7 @@ var ws: WebSocket;
 
 
 const CELL_SIZE = 15
-const INIT_SPEED = 1000
+const INIT_SPEED = 100
 const tetrisGridInit: number[][] = []
 var nextBlock: Block;
 
@@ -102,6 +102,8 @@ const GamePanel = (props: any) => {
           serverMessagesList.push("received new block")
         } else if (msgObj.message === "ERROR") {
           serverMessagesList.push(`[Error] ${msgObj.remarks}`)
+        } else if (msgObj.message === "GAMEOVER") {
+          serverMessagesList.push("WON")
         }
 
       } else if (msgObj.sender === "RIVAL") {
