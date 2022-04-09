@@ -24,6 +24,7 @@ var ws: WebSocket;
 
 
 const CELL_SIZE = 15
+const INIT_SPEED = 1000
 const tetrisGridInit: number[][] = []
 var nextBlock: Block;
 
@@ -36,9 +37,9 @@ const GamePanel = (props: any) => {
   const [myScore, setMyScore] = useState(0);
   const [opponentScore, setOpponentScore] = useState(0);
   const [serverMessages, setServerMessages] = useState<string[]>([]);
-  const [nextBlockQueue, setNextBlockQueue] = useState<number[]>([-1,-1,-1,-1]);
+  const [nextBlockQueue, setNextBlockQueue] = useState<number[]>([-1, -1, -1, -1]);
   //const [nextBlock, setNextBlock] = useState<Block>();
-  const [speed, setSpeed] = useState(500);
+  const [speed, setSpeed] = useState(INIT_SPEED);
   const [gameId, setGameId] = useState('');
   var timer: NodeJS.Timer;
   const fact = new TetrisBlockFactory();
@@ -92,7 +93,7 @@ const GamePanel = (props: any) => {
           const nextNBlocks: number[] = JSON.parse(msgObj.remarks)
           console.log("game start")
           console.log(nextNBlocks)
-          setNextBlockQueue(nextBlockQueue => [...nextBlockQueue, ...nextNBlocks]);
+          setNextBlockQueue(nextNBlocks);
           startGame();
           serverMessagesList.push("Game start")
         } else if (msgObj.message === "NEWBLOCK") {
@@ -125,6 +126,15 @@ const GamePanel = (props: any) => {
       ws.send(msg)
     }
   }, [nextBlockQueue]);
+
+  useEffect(() => {
+    if(!isGameOver){
+      console.log("game over")
+        if (!timer) {
+          clearInterval(timer);
+        }
+    }
+  }, [isGameOver]);
 
   const requestGameStart = () => {
     const msg = new GameMessage(characterId, "REQUESTSTART", gameId).toString();
