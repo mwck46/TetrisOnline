@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, StyleSheet, Image, Text, TextInput, Modal, TouchableOpacity, ScrollView } from 'react-native';
 import uuid from 'react-native-uuid';
 import Constants from "expo-constants";
+var Mutex = require("async-mutex").Mutex;
 
 import Cell from "./Cell"
+import Grid from "./Grid"
 import { GameMessage } from "./GameMessage"
 import { getRandomInt, ColorCode, ColorTable, create2dArray } from "./helper"
 
@@ -24,9 +26,13 @@ var ws: WebSocket;
 
 
 const CELL_SIZE = 15
-const INIT_SPEED = 100
+const INIT_SPEED = 1000
 const tetrisGridInit: number[][] = []
+var bufferedOpponentGrid: number[][] = []
+var bufferedMyGrid: number[][] = []
 var nextBlock: Block;
+var renderTimer: NodeJS.Timer;
+var gameUpdateTimer: NodeJS.Timer;
 
 const GamePanel = (props: any) => {
   const { w, h } = props;
@@ -41,8 +47,9 @@ const GamePanel = (props: any) => {
   //const [nextBlock, setNextBlock] = useState<Block>();
   const [speed, setSpeed] = useState(INIT_SPEED);
   const [gameId, setGameId] = useState('');
-  var timer: NodeJS.Timer;
   const fact = new TetrisBlockFactory();
+
+  const mutex = useRef(new Mutex());
 
   // React hook equivalent to componentDidMount
   // https://stackoverflow.com/a/54655508/9265852
@@ -51,10 +58,10 @@ const GamePanel = (props: any) => {
     setTetrisGrid(grid1);
 
     var grid2 = create2dArray(w, h);
+    bufferedOpponentGrid = grid2;
     setTetrisGridOpponent(grid2);
 
     ws = new WebSocket(url);
-    console.log("ws = ", ws)
 
     ws.onopen = () => {
       const serverMessagesList: string[] = [];
@@ -73,7 +80,7 @@ const GamePanel = (props: any) => {
     };
     ws.onmessage = (e) => {
       const serverMessagesList: string[] = [];
-      serverMessagesList.push(e.data)
+      //serverMessagesList.push(e.data)
 
       //console.log(e.data)
       const msgObj = GameMessage.parseFromSocket(e.data)
@@ -107,9 +114,24 @@ const GamePanel = (props: any) => {
         }
 
       } else if (msgObj.sender === "RIVAL") {
+
         if (msgObj.message === "TICK") {
-          const newOpponentTetrisGrid = JSON.parse(msgObj.remarks)
-          setTetrisGridOpponent(newOpponentTetrisGrid)
+          //
+          //                     CAUTION! 
+          //
+          // We should NOT update the opponent grid immediately!
+          // Reason: everything in react native is async, including 
+          // websocket receive message and timer interval times up
+          // If we set a small GAME_SPEED (e.g. 100), the websocket message 
+          // update event will dominate the async task queue, thus causing 
+          // the tetrisGridMine not updating
+          // 
+          // WRONG!
+          //const newOpponentTetrisGrid = JSON.parse(msgObj.remarks)
+          //setTetrisGridOpponent(newOpponentTetrisGrid)
+          // 
+          // CORRECT! buffer it first
+          bufferedOpponentGrid = JSON.parse(msgObj.remarks)
         }
       }
       else {
@@ -130,34 +152,42 @@ const GamePanel = (props: any) => {
   }, [nextBlockQueue]);
 
   useEffect(() => {
-    if(!isGameOver){
+    if (isGameOver) {
       console.log("game over")
-        if (!timer) {
-          clearInterval(timer);
-        }
+      if (renderTimer) {
+        clearInterval(renderTimer);
+      }
     }
   }, [isGameOver]);
 
-  const requestGameStart = () => {
+  const requestGameStart = useCallback(() => {
+    console.log("request game start")
     const msg = new GameMessage(characterId, "REQUESTSTART", gameId).toString();
     ws.send(msg)
-  }
+  }, [gameId])
 
   const startGame = () => {
-    if (!timer) {
-      clearInterval(timer);
+    console.log("game start")
+    if (renderTimer) {
+      clearInterval(renderTimer);
     }
 
     generateNextBlock();
-    timer = setInterval(() => {
-      // Make sure tick receive the latest tetrisGrid value
-      setTetrisGrid(grid => { 
-        const newGrid = tick(grid, nextBlock);
-        // send your current grid to your opponent
-        const msg = new GameMessage(characterId, "TICK", JSON.stringify(newGrid)).toString();
-        ws.send(msg);
-        return newGrid;
-      })
+
+    renderTimer = setInterval(() => {
+      tick();
+      //// Make sure tick receive the latest tetrisGrid value
+      //setTetrisGrid(grid => {
+      //  const newGrid = tick(grid, nextBlock);
+      //  // send your current grid to your opponent
+      //  const msg = new GameMessage(characterId, "TICK", JSON.stringify(newGrid)).toString();
+      //  ws.send(msg);
+
+      //  return newGrid;
+
+      //})
+
+      //setTetrisGridOpponent(bufferedOpponentGrid);
     }, speed)
   }
 
@@ -169,31 +199,76 @@ const GamePanel = (props: any) => {
     var grid1 = create2dArray(w, h);
     setTetrisGrid(grid1);
     var grid2 = create2dArray(w, h);
+    bufferedOpponentGrid = grid2;
     setTetrisGridOpponent(grid2);
     startGame();
   }
 
-  const tick = (grid: number[][], nextBlock: Block) => {
-    //console.log("tick")
+  const tick = () => {
+    console.log("tick")
+    setTetrisGrid(tetrisGridMine => {
+      let tetrisGridClone = nextBlock?.translate(tetrisGridMine, 'down');
 
-    //let tetrisGridClone = grid.map( (row) => {return [...row]} )
+      if (!tetrisGridClone) {
+        console.log("cannot drop")
+        //tetrisGridClone = tetrisGridMine.map((row) => { return [...row] })
+        tetrisGridClone = turnBlockToGray(tetrisGridMine);
+        tetrisGridClone = clearOutGrid(tetrisGridClone);
 
-    let tetrisGridClone = nextBlock?.translate(grid, 'down');
-    if (!tetrisGridClone) {
-      console.log("cannot drop")
-      grid = turnBlockToGray(grid);
-      grid = clearOutGrid(grid);
-      var IsGameOver = checkIfIsGameOver(grid);
-      if (IsGameOver)
-      {
-        clearInterval(timer);
-        return create2dArray(w,h);
+        var IsGameOver = checkIfIsGameOver(tetrisGridClone);
+        if (IsGameOver) {
+          setIsGameOver(true)
+        }else{
+          generateNextBlock();
+        }
+
+        return tetrisGridClone;
       }
-      generateNextBlock();
-      tetrisGridClone = grid;
-    }
 
-    return tetrisGridClone;
+      // send your current grid to your opponent
+      const msg = new GameMessage(characterId, "TICK", JSON.stringify(tetrisGridClone)).toString();
+      ws.send(msg);
+
+      console.log("updated")
+      
+      
+      for(let rowIdx=0; rowIdx< tetrisGridMine.length; ++rowIdx){
+        for(let colIdx=0; colIdx<tetrisGridMine[0].length; ++colIdx){
+          if(tetrisGridClone[rowIdx][colIdx] == tetrisGridMine[rowIdx][colIdx]){
+            tetrisGridClone[rowIdx][colIdx] = tetrisGridMine[rowIdx][colIdx];
+          }
+        }
+      }
+      return tetrisGridClone;
+
+      // not update 
+      //for(let rowIdx=0; rowIdx< tetrisGridMine.length; ++rowIdx){
+      //  for(let colIdx=0; colIdx<tetrisGridMine[0].length; ++colIdx){
+      //    if(tetrisGridClone[rowIdx][colIdx] != tetrisGridMine[rowIdx][colIdx]){
+      //      console.log(tetrisGridMine[rowIdx][colIdx], tetrisGridClone[rowIdx][colIdx]);
+      //      tetrisGridMine[rowIdx][colIdx] = tetrisGridClone[rowIdx][colIdx];
+      //    }
+      //  }
+      //}
+      //return tetrisGridMine;
+
+      //
+      // update every time
+      //return tetrisGridClone;
+
+      //
+      // update every time
+      //return tetrisGridClone.map((row, rowIdx)=>{
+      //  return row.map(((col, colIdx) => {
+      //    return (tetrisGridClone![rowIdx][colIdx] != tetrisGridMine[rowIdx][colIdx])
+      //      ? tetrisGridClone![rowIdx][colIdx] 
+      //      : tetrisGridMine[rowIdx][colIdx]
+      //    //return tetrisGridClone![rowIdx][colIdx]
+      //  }))
+      //});
+    })
+
+    setTetrisGridOpponent(bufferedOpponentGrid);
   }
 
   const turnBlockToGray = (grid: number[][]) => {
@@ -202,6 +277,7 @@ const GamePanel = (props: any) => {
       var colIdx = nextBlock.currCoord[1] + p[1];
       console.log(rowIdx, colIdx, grid[rowIdx][colIdx]);
       grid[rowIdx][colIdx] = ColorCode.Gray;
+      console.log(rowIdx, colIdx, grid[rowIdx][colIdx]);
     }
     return grid;
   }
@@ -259,7 +335,7 @@ const GamePanel = (props: any) => {
   }
 
   const renderCells = (grid: number[][]) => {
-    // console.log('renderCells');
+    console.log('renderCells', Date.now());
 
     // Array.prototype.map(), create new array by populate the results 
     // of calling a provided function on every element in the calling array.
@@ -296,42 +372,57 @@ const GamePanel = (props: any) => {
     })
   }
 
-  const shiftCells = (grid: number[][], direction: string) => {
-    let tetrisGridClone = nextBlock?.translate(grid, direction);
-    if (!tetrisGridClone) {
-      console.log("cannot shift")
-      return
-    }
-    setTetrisGrid(tetrisGridClone)
+  const shiftLeft = useCallback(() => {
+    shiftCells('left');
+  }, [])
+
+  const shiftRight = useCallback(() => {
+    shiftCells('right');
+  }, [])
+
+  const shiftCells = (direction: string) => {
+    setTetrisGrid(tetrisGridMine => {
+      let tetrisGridClone = nextBlock?.translate(tetrisGridMine, direction);
+      if (!tetrisGridClone) {
+        console.log("cannot shift")
+        return tetrisGridMine;
+      }
+      return tetrisGridClone;
+    })
   }
 
-  const rotateCells = () => {
+  const rotateCells = useCallback(() => {
     console.log("rotate")
+    setTetrisGrid(tetrisGridMine => {
     let tetrisGridClone = nextBlock?.rotate(tetrisGridMine);
     if (!tetrisGridClone) {
       console.log("cannot rotate")
-      return
+      return tetrisGridMine
     }
-    setTetrisGrid(tetrisGridClone)
-  }
+    return tetrisGridClone;
+    })
+  }, [])
 
-  const registerNewGame = () => {
+  const registerNewGame = useCallback(() => {
     const msg = new GameMessage(characterId, "NEWGAME").toString();
     //console.log(msg)
     ws.send(msg)
-  }
+    setTetrisGridOpponent(bufferedOpponentGrid);
+  }, [])
 
-  const joinGame = (gameId: string) => {
+  const joinGame = useCallback(() => {
     ws.send(new GameMessage(characterId, "JOINGAME", gameId).toString())
-  }
+    setTetrisGridOpponent(bufferedOpponentGrid);
+  }, [])
 
   const renderStart = () => {
+    console.log("renderstart")
     return (
       <Modal
         animationType={"slide"}
         // transparent={true}
         visible={isGameOver}
-        style={{ flex: 1 }}
+        style={{ flex: 1, margin: 0 }}
       >
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,.5)' }}>
           <Text style={{ fontSize: 64, fontWeight: '800' }}>
@@ -343,7 +434,7 @@ const GamePanel = (props: any) => {
             <Text style={{ color: 'cyan' }}>S</Text>
           </Text>
 
-          <TouchableOpacity onPress={() => registerNewGame()}>
+          <TouchableOpacity onPress={registerNewGame}>
             <Text style={{ fontSize: 32, color: 'white', fontWeight: '500' }}>
               Host Game
             </Text>
@@ -351,7 +442,7 @@ const GamePanel = (props: any) => {
 
 
           <View style={{ flex: 1, flexDirection: 'row', alignItems: 'flex-start', }}>
-            <TouchableOpacity onPress={() => joinGame(gameId)}>
+            <TouchableOpacity onPress={joinGame}>
               <Text style={{ fontSize: 32, color: 'white', fontWeight: '500', }}>
                 Join
               </Text>
@@ -371,7 +462,7 @@ const GamePanel = (props: any) => {
   }
 
   return (
-    <View style={{ flexDirection: 'column', justifyContent: 'space-around' }}>
+    <View style={{ flexDirection: 'column', justifyContent: 'space-around', margin: 10 }}>
 
       <View style={{ paddingTop: 10, justifyContent: 'center', alignItems: 'center' }}>
         <Text style={{ fontWeight: '700', fontSize: 26 }}>TETRIS ONLINE </Text>
@@ -381,10 +472,10 @@ const GamePanel = (props: any) => {
       <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
 
         <View style={{ marginRight: 10, flexDirection: 'row', alignItems: 'flex-end' }}>
-          <TouchableOpacity onPress={() => shiftCells(tetrisGridMine, 'left')}>
+          <TouchableOpacity onPress={shiftLeft}>
             <Image style={styles.img} source={require('../assets/left.jpg')} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => shiftCells(tetrisGridMine, 'right')}>
+          <TouchableOpacity onPress={shiftRight}>
             <Image style={styles.img} source={require('../assets/right.jpg')} />
           </TouchableOpacity>
         </View>
@@ -394,13 +485,14 @@ const GamePanel = (props: any) => {
             <Text>Opponent</Text>
           </View>
           <View style={{ backgroundColor: 'white' }}>
-            {renderCells(tetrisGridOpponent)}
+            {/* {renderCells(tetrisGridOpponent)} */}
+            <Grid grid ={tetrisGridOpponent}/>
           </View>
         </View>
 
         <View style={{ marginHorizontal: 35, alignItems: 'center', flexDirection: 'column' }}>
-          <PreviewPanel nextBlockQueue={nextBlockQueue} />
-          <TouchableOpacity onPress={() => requestGameStart()} >
+          {/* <PreviewPanel nextBlockQueue={nextBlockQueue} /> */}
+          <TouchableOpacity onPress={requestGameStart} >
             <Text style={{ fontSize: 16, fontWeight: '500', borderWidth: 3, }}>
               {'START'}
             </Text>
@@ -413,12 +505,13 @@ const GamePanel = (props: any) => {
             <Text>You</Text>
           </View>
           <View style={{ backgroundColor: 'white' }}>
-            {renderCells(tetrisGridMine)}
+            {/* {renderCells(tetrisGridMine)} */}
+            <Grid grid={tetrisGridMine}/>
           </View>
         </View>
 
         <View style={{ marginRight: 10, flexDirection: 'row', alignItems: 'flex-end' }}>
-          <TouchableOpacity onPress={() => rotateCells()}>
+          <TouchableOpacity onPress={rotateCells}>
             <Image style={styles.img} source={require('../assets/rotate.png')} />
           </TouchableOpacity>
         </View>
@@ -427,13 +520,13 @@ const GamePanel = (props: any) => {
         <View style={styles.logger}>
           <ScrollView style={{ width: 300, height: 300 }}>
             {
-              serverMessages.map((item, ind) => {
-                return (
-                  <Text key={ind}>
-                    {item}
-                  </Text>
-                )
-              })
+              // serverMessages.map((item, ind) => {
+              //   return (
+              //     <Text key={ind}>
+              //       {item}
+              //     </Text>
+              //   )
+              // })
             }
           </ScrollView>
         </View>
