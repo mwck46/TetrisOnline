@@ -200,7 +200,6 @@ const GamePanel = (props: any) => {
     for (let p of nextBlock.orientations[nextBlock.currOrientationIdx]) {
       var rowIdx = nextBlock.currCoord[0] + p[0];
       var colIdx = nextBlock.currCoord[1] + p[1];
-      console.log(rowIdx, colIdx, grid[rowIdx][colIdx]);
       grid[rowIdx][colIdx] = ColorCode.Gray;
     }
     return grid;
@@ -299,7 +298,7 @@ const GamePanel = (props: any) => {
   const shiftCells = (grid: number[][], direction: string) => {
     let tetrisGridClone = nextBlock?.translate(grid, direction);
     if (!tetrisGridClone) {
-      console.log("cannot shift")
+      // console.log("cannot shift")
       return
     }
     setTetrisGrid(tetrisGridClone)
@@ -309,7 +308,7 @@ const GamePanel = (props: any) => {
     console.log("rotate")
     let tetrisGridClone = nextBlock?.rotate(tetrisGridMine);
     if (!tetrisGridClone) {
-      console.log("cannot rotate")
+      // console.log("cannot rotate")
       return
     }
     setTetrisGrid(tetrisGridClone)
