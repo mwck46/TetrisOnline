@@ -227,30 +227,30 @@ const GamePanel = (props: any) => {
 
       // send your current grid to your opponent
       const msg = new GameMessage(characterId, "TICK", JSON.stringify(tetrisGridClone)).toString();
-      ws.send(msg);
+      //ws.send(msg);
 
       console.log("updated")
       
       
-      for(let rowIdx=0; rowIdx< tetrisGridMine.length; ++rowIdx){
-        for(let colIdx=0; colIdx<tetrisGridMine[0].length; ++colIdx){
-          if(tetrisGridClone[rowIdx][colIdx] == tetrisGridMine[rowIdx][colIdx]){
-            tetrisGridClone[rowIdx][colIdx] = tetrisGridMine[rowIdx][colIdx];
-          }
-        }
-      }
-      return tetrisGridClone;
-
-      // not update 
       //for(let rowIdx=0; rowIdx< tetrisGridMine.length; ++rowIdx){
       //  for(let colIdx=0; colIdx<tetrisGridMine[0].length; ++colIdx){
-      //    if(tetrisGridClone[rowIdx][colIdx] != tetrisGridMine[rowIdx][colIdx]){
-      //      console.log(tetrisGridMine[rowIdx][colIdx], tetrisGridClone[rowIdx][colIdx]);
-      //      tetrisGridMine[rowIdx][colIdx] = tetrisGridClone[rowIdx][colIdx];
+      //    if(tetrisGridClone[rowIdx][colIdx] == tetrisGridMine[rowIdx][colIdx]){
+      //      tetrisGridClone[rowIdx][colIdx] = tetrisGridMine[rowIdx][colIdx];
       //    }
       //  }
       //}
-      //return tetrisGridMine;
+      //return tetrisGridClone;
+
+      // not update 
+      for(let rowIdx=0; rowIdx< tetrisGridMine.length; ++rowIdx){
+        for(let colIdx=0; colIdx<tetrisGridMine[0].length; ++colIdx){
+          if(tetrisGridClone[rowIdx][colIdx] != tetrisGridMine[rowIdx][colIdx]){
+            //console.log(tetrisGridMine[rowIdx][colIdx], tetrisGridClone[rowIdx][colIdx]);
+            tetrisGridMine[rowIdx][colIdx] = tetrisGridClone[rowIdx][colIdx];
+          }
+        }
+      }
+      return tetrisGridMine;
 
       //
       // update every time
@@ -486,7 +486,7 @@ const GamePanel = (props: any) => {
           </View>
           <View style={{ backgroundColor: 'white' }}>
             {/* {renderCells(tetrisGridOpponent)} */}
-            <Grid grid ={tetrisGridOpponent}/>
+            {/* <Grid grid ={tetrisGridOpponent}/> */}
           </View>
         </View>
 
