@@ -85,14 +85,9 @@ export class Block {
 
   canTranslate(tetrisGrid: number[][], points: number[][]) {
     for (let p of points) {
-      if(p[0] >= tetrisGrid.length){
-        console.log(p[0], p[1], tetrisGrid.length);
-        return false;
-      }else if(p[1] >= tetrisGrid[0].length || p[1] < 0){
-        console.log(p[0], p[1], tetrisGrid.length);
-        return false;
-      }else if(tetrisGrid[p[0]][p[1]] > 0){
-        console.log(p[0], p[1], tetrisGrid[p[0]][p[1]]);
+      if((p[0] >= tetrisGrid.length)
+         || (p[1] >= tetrisGrid[0].length || p[1] < 0)
+         || (tetrisGrid[p[0]][p[1]] > 0)) {
         return false;
       }
     }
