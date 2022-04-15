@@ -53,8 +53,8 @@ class Block {
 const speed = 1000
 const tetrisGridInit: number[][] = []
 var nextBlock: Block;
-const w = 50;
-const h = 50;
+const w = 30;
+const h = 20;
 
 
 export default function App() {
@@ -63,10 +63,9 @@ export default function App() {
   useEffect(() => {
     var grid1 = create2dArray(w, h);
     setTetrisGrid(grid1);
-  }, []);
-
-  const startGame = useCallback(() => {
     generateNextBlock();
+
+    console.log("start timer")
     setInterval(() => {
       tick();
     }, speed)
@@ -110,12 +109,6 @@ export default function App() {
         <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
 
           <View style={{ marginHorizontal: 35, alignItems: 'center', flexDirection: 'column' }}>
-
-            <TouchableOpacity onPress={startGame} >
-              <Text style={{ fontSize: 16, fontWeight: '500', margin: 5, borderWidth: 3, }}>
-                {'START'}
-              </Text>
-            </TouchableOpacity>
 
             <View style={{ backgroundColor: 'white' }}>
               {
